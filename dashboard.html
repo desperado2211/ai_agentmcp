@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spending Dashboard</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --page: #f9f9f7;
+        --surface-1: #fcfcfb;
+        --text-primary: #0b0b0b;
+        --text-secondary: #52514e;
+        --text-muted: #898781;
+        --grid: #e1e0d9;
+        --baseline: #c3c2b7;
+        --border: rgba(11, 11, 11, 0.1);
+        --hover-wash: rgba(11, 11, 11, 0.04);
+        --delta-good: #006300;
+        --delta-bad: #d03b3b;
+        --series-1: #2a78d6;
+        --series-2: #eb6834;
+        --series-3: #1baf7a;
+        --series-4: #eda100;
+        --series-5: #e87ba4;
+        --series-6: #008300;
+        --series-7: #6250d6;
+        --series-8: #e34948;
+        --series-other: #898781;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          color-scheme: dark;
+          --page: #0d0d0d;
+          --surface-1: #1a1a19;
+          --text-primary: #f0efec;
+          --text-secondary: #c3c2b7;
+          --text-muted: #898781;
+          --grid: #2c2c2a;
+          --baseline: #383835;
+          --border: rgba(255, 255, 255, 0.1);
+          --hover-wash: rgba(255, 255, 255, 0.05);
+          --delta-good: #0ca30c;
+          --delta-bad: #e66767;
+          --series-1: #3987e5;
+          --series-2: #d95926;
+          --series-3: #199e70;
+          --series-4: #c98500;
+          --series-5: #d55181;
+          --series-6: #008300;
+          --series-7: #9085e9;
+          --series-8: #e66767;
+          --series-other: #6b6a66;
+        }
+      }
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --page: #0d0d0d;
+        --surface-1: #1a1a19;
+        --text-primary: #f0efec;
+        --text-secondary: #c3c2b7;
+        --text-muted: #898781;
+        --grid: #2c2c2a;
+        --baseline: #383835;
+        --border: rgba(255, 255, 255, 0.1);
+        --hover-wash: rgba(255, 255, 255, 0.05);
+        --delta-good: #0ca30c;
+        --delta-bad: #e66767;
+        --series-1: #3987e5;
+        --series-2: #d95926;
+        --series-3: #199e70;
+        --series-4: #c98500;
+        --series-5: #d55181;
+        --series-6: #008300;
+        --series-7: #9085e9;
+        --series-8: #e66767;
+        --series-other: #6b6a66;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--text-primary);
+        font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      .page { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; }
+      header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+      h1 { margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
+      .subtitle { margin: 4px 0 0; color: var(--text-secondary); }
+      a { color: inherit; }
+      .back-link { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; }
+      .back-link:hover { color: var(--text-primary); }
+
+      .filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+      .segmented { display: inline-flex; max-width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 2px; background: var(--surface-1); flex-wrap: wrap; }
+      .segmented button {
+        border: 0; background: transparent; color: var(--text-secondary); font: inherit;
+        padding: 6px 12px; border-radius: 8px; cursor: pointer;
+      }
+      .segmented button:hover { background: var(--hover-wash); }
+      .segmented button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); font-weight: 600; }
+      .ghost { border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary); font: inherit; padding: 7px 12px; border-radius: 10px; cursor: pointer; }
+      .ghost:hover { color: var(--text-primary); }
+
+      .card { min-width: 0; background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+      .tiles { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+      .tile-label { color: var(--text-secondary); font-size: 0.85rem; }
+      .tile-value { font-size: 1.6rem; font-weight: 600; margin-top: 4px; letter-spacing: -0.01em; }
+      .tile-hero .tile-value { font-size: 3rem; line-height: 1.1; }
+      .tile-meta { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
+      .delta-up { color: var(--delta-bad); font-weight: 600; }
+      .delta-down { color: var(--delta-good); font-weight: 600; }
+
+      .charts { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 12px; margin-bottom: 12px; }
+      .card h2 { margin: 0; font-size: 1rem; font-weight: 600; }
+      .card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+      .segmented.small button { padding: 4px 10px; font-size: 0.85rem; }
+      .week-band .crosshair { stroke: transparent; }
+      .week-band:hover .crosshair, .week-band:focus-visible .crosshair { stroke: var(--baseline); }
+      .day-band .crosshair { stroke: transparent; }
+      .day-band .hover-dot { opacity: 0; }
+      .day-band:hover .crosshair, .day-band:focus-visible .crosshair { stroke: var(--baseline); }
+      .day-band:hover .hover-dot, .day-band:focus-visible .hover-dot { opacity: 1; }
+      .trend-card { margin-bottom: 12px; }
+      .card .card-sub { margin: 2px 0 12px; color: var(--text-secondary); font-size: 0.85rem; }
+
+      .legend { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-bottom: 8px; }
+      .legend button {
+        display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; background: transparent;
+        color: var(--text-secondary); font: inherit; font-size: 0.85rem; padding: 3px 8px; border-radius: 999px; cursor: pointer;
+      }
+      .legend button:hover { background: var(--hover-wash); }
+      .legend button[aria-pressed="false"] { color: var(--text-muted); text-decoration: line-through; }
+      .legend button[aria-pressed="false"] .swatch { opacity: 0.25; }
+      .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+      .chart { position: relative; width: 100%; }
+      .chart svg { display: block; width: 100%; overflow: visible; }
+      .chart text { font: 12px system-ui, -apple-system, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+      .tick { fill: var(--text-muted); }
+      .cap-label { fill: var(--text-primary); font-weight: 600; }
+      .hit { cursor: default; outline: none; }
+      .hit:hover .seg, .hit:focus-visible .seg { filter: brightness(1.12); }
+      .hit:focus-visible .focus-ring { stroke: var(--text-primary); }
+
+      .cat-rows { display: grid; gap: 10px; }
+      .cat-row { display: grid; grid-template-columns: 110px 1fr; gap: 10px; align-items: center; border-radius: 8px; outline: none; }
+      .cat-row:hover, .cat-row:focus-visible { background: var(--hover-wash); }
+      .cat-name { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .cat-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+      .cat-bar { height: 16px; border-radius: 0 4px 4px 0; min-width: 2px; }
+      .cat-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .cat-value .share { color: var(--text-muted); margin-left: 4px; }
+
+      .tooltip {
+        position: fixed; pointer-events: none; z-index: 10; min-width: 140px;
+        background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+        padding: 8px 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); opacity: 0; transition: opacity 0.08s;
+      }
+      .tooltip.visible { opacity: 1; }
+      .tooltip .tt-title { color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 4px; }
+      .tooltip .tt-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+      .tooltip .tt-key { width: 12px; height: 2px; border-radius: 1px; flex: none; }
+      .tooltip .tt-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+      .tooltip .tt-name { color: var(--text-secondary); }
+      .tooltip { max-width: 300px; }
+      .tooltip .tt-row { align-items: baseline; }
+      .tooltip .tt-name { overflow-wrap: anywhere; }
+      .tooltip .tt-meta { color: var(--text-muted); font-size: 0.78rem; white-space: nowrap; margin-left: auto; padding-left: 8px; }
+      .tooltip .tt-total { border-top: 1px solid var(--grid); margin-top: 6px; padding-top: 6px; }
+      .tooltip .tt-more { color: var(--text-muted); font-size: 0.78rem; margin-top: 2px; }
+
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+      th, td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+      th:first-child, td:first-child { text-align: left; }
+      thead th { color: var(--text-secondary); font-weight: 600; font-size: 0.85rem; }
+      tbody td.zero { color: var(--text-muted); }
+      tfoot td { font-weight: 600; border-bottom: 0; }
+      .th-cat { display: inline-flex; align-items: center; gap: 6px; }
+
+      .empty { color: var(--text-muted); padding: 24px 0; text-align: center; }
+      .error { color: var(--delta-bad); }
+      .loading .chart, .loading .cat-rows, .loading table { opacity: 0.5; }
+
+      @media (max-width: 860px) {
+        .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .tile-hero { grid-column: 1 / -1; }
+        .charts { grid-template-columns: minmax(0, 1fr); }
+      }
+      @media (max-width: 480px) {
+        .tile-hero .tile-value { font-size: 2.4rem; }
+        .cat-row { grid-template-columns: 90px 1fr; }
+        .card { padding: 16px; }
+        .tile-value { font-size: 1.35rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="app">
+      <header>
+        <div>
+          <a class="back-link" href="index.html">← Back to wallet</a>
+          <h1>Spending dashboard</h1>
+          <p class="subtitle" id="rangeText">Weekly spend and category breakdown</p>
+        </div>
+      </header>
+
+      <div class="filters">
+        <div class="segmented" role="group" aria-label="Date range" id="rangeButtons">
+          <button type="button" data-range="since-oct" aria-pressed="true">Since Oct 1</button>
+          <button type="button" data-range="4w" aria-pressed="false">Last 4 weeks</button>
+          <button type="button" data-range="12w" aria-pressed="false">Last 12 weeks</button>
+          <button type="button" data-range="all" aria-pressed="false">All time</button>
+        </div>
+        <button type="button" class="ghost" id="refreshButton">Refresh</button>
+      </div>
+
+      <section class="tiles" aria-label="Summary">
+        <div class="card tile-hero">
+          <div class="tile-label" id="totalLabel">Total spent this month</div>
+          <div class="tile-value" id="totalValue">—</div>
+          <div class="tile-meta" id="totalMeta"></div>
+        </div>
+        <div class="card">
+          <div class="tile-label">This week</div>
+          <div class="tile-value" id="weekValue">—</div>
+          <div class="tile-meta" id="weekMeta"></div>
+        </div>
+        <div class="card">
+          <div class="tile-label">Weekly average</div>
+          <div class="tile-value" id="avgValue">—</div>
+          <div class="tile-meta" id="avgMeta"></div>
+        </div>
+        <div class="card">
+          <div class="tile-label">Top category</div>
+          <div class="tile-value" id="topValue">—</div>
+          <div class="tile-meta" id="topMeta"></div>
+        </div>
+      </section>
+
+      <section class="charts">
+        <div class="card">
+          <div class="card-head">
+            <h2>Weekly spend</h2>
+            <div class="segmented small" role="group" aria-label="Chart type" id="chartTypeButtons">
+              <button type="button" data-chart="bar" aria-pressed="true">Bars</button>
+              <button type="button" data-chart="line" aria-pressed="false">Lines</button>
+            </div>
+          </div>
+          <p class="card-sub">Weeks run Monday to Sunday, split by category. Click a category to hide or show it.</p>
+          <div class="legend" id="legend" aria-label="Categories"></div>
+          <div class="chart" id="weeklyChart"></div>
+        </div>
+        <div class="card">
+          <h2>By category</h2>
+          <p class="card-sub" id="categorySub">Share of spending in the selected range</p>
+          <div class="cat-rows" id="categoryRows"></div>
+        </div>
+      </section>
+
+      <section class="card trend-card">
+        <div class="card-head">
+          <h2>Spending trend</h2>
+          <div class="segmented small" role="group" aria-label="Trend mode" id="trendModeButtons">
+            <button type="button" data-trend="daily" aria-pressed="true">Daily</button>
+            <button type="button" data-trend="cumulative" aria-pressed="false">Cumulative</button>
+          </div>
+        </div>
+        <p class="card-sub" id="trendSub">Spending per day in the selected range</p>
+        <div class="chart" id="trendChart"></div>
+      </section>
+
+      <section class="card">
+        <h2>Week by category</h2>
+        <p class="card-sub">Every value in the charts above</p>
+        <div class="table-wrap" id="tableWrap"></div>
+      </section>
+    </div>
+
+    <div class="tooltip" id="tooltip" role="tooltip"></div>
+
+    <script>
+      const API_BASE = location.protocol.startsWith("http") && location.port === "3000" ? "" : "http://localhost:3000";
+      const INCOME_CATEGORIES = new Set(["Salary"]);
+      // Color follows the category, never its rank. "Other" (and anything unknown) is the neutral fold.
+      const CATEGORY_SLOTS = ["Food", "Bills", "Grocery", "Transport", "Shopping", "Entertainment", "Healthcare", "Travel"];
+      const DAY = 86400000;
+      const SVG_NS = "http://www.w3.org/2000/svg";
+
+      const state = { expenses: [], range: "since-oct", chartType: "bar", trendMode: "daily", hidden: new Set() };
+
+      try {
+        const savedTheme = localStorage.getItem("expenseos-theme");
+        if (savedTheme === "light" || savedTheme === "dark") document.documentElement.dataset.theme = savedTheme;
+        const savedRange = localStorage.getItem("expenseos-dashboard-range");
+        if (savedRange) state.range = savedRange;
+        const savedChart = localStorage.getItem("expenseos-dashboard-chart");
+        if (savedChart === "bar" || savedChart === "line") state.chartType = savedChart;
+        const savedTrend = localStorage.getItem("expenseos-dashboard-trend");
+        if (savedTrend === "daily" || savedTrend === "cumulative") state.trendMode = savedTrend;
+      } catch {}
+
+      const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+      const moneyRound = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+      const formatMoney = (value) => money.format(value);
+      const formatAxis = (value) => (value >= 1000 ? `$${+(value / 1000).toFixed(1)}K` : moneyRound.format(value));
+      const formatDay = (date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+      function categoryColor(category) {
+        const slot = CATEGORY_SLOTS.indexOf(category);
+        return slot === -1 ? "var(--series-other)" : `var(--series-${slot + 1})`;
+      }
+
+      function categoryOrder(a, b) {
+        const ia = CATEGORY_SLOTS.indexOf(a);
+        const ib = CATEGORY_SLOTS.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
+      }
+
+      function parseLocalDate(value) {
+        const [year, month, day] = String(value).slice(0, 10).split("-").map(Number);
+        return new Date(year, month - 1, day);
+      }
+
+      function startOfDay(date) {
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      }
+
+      function weekStart(date) {
+        const start = startOfDay(date);
+        start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+        return start;
+      }
+
+      function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+      }
+
+      function rangeStart(spending) {
+        const today = startOfDay(new Date());
+        if (state.range === "since-oct") return new Date(today.getFullYear(), 9, 1);
+        if (state.range === "4w") return addDays(weekStart(today), -21);
+        if (state.range === "12w") return addDays(weekStart(today), -77);
+        const earliest = spending.reduce((min, item) => (item.day < min ? item.day : min), today);
+        return earliest;
+      }
+
+      function buildModel() {
+        const today = startOfDay(new Date());
+        const spending = state.expenses
+          .filter((item) => !INCOME_CATEGORIES.has(item.category))
+          .map((item) => ({ ...item, day: parseLocalDate(item.date), amount: Number(item.amount) || 0 }))
+          .filter((item) => !Number.isNaN(item.day.getTime()));
+
+        let start = rangeStart(spending);
+        if (start > today) start = today;
+        const firstWeek = weekStart(start);
+        const lastWeek = weekStart(today);
+        const weekCount = Math.round((lastWeek - firstWeek) / (7 * DAY)) + 1;
+
+        const weeks = Array.from({ length: weekCount }, (_, i) => {
+          const begin = addDays(firstWeek, i * 7);
+          return {
+            start: i === 0 ? start : begin,
+            end: addDays(begin, 6),
+            isPartial: i === 0 && start.getTime() !== begin.getTime(),
+            isCurrent: i === weekCount - 1,
+            byCategory: {},
+            items: {},
+            total: 0,
+          };
+        });
+
+        const allCategories = new Set();
+        spending.forEach((item) => {
+          if (item.day < start || item.day > today) return;
+          allCategories.add(item.category);
+          if (state.hidden.has(item.category)) return;
+          const index = Math.round((weekStart(item.day) - firstWeek) / (7 * DAY));
+          const week = weeks[index];
+          if (!week) return;
+          week.byCategory[item.category] = (week.byCategory[item.category] || 0) + item.amount;
+          (week.items[item.category] ||= []).push(item);
+          week.total += item.amount;
+        });
+
+        const categories = [...allCategories].sort(categoryOrder);
+        const visible = categories.filter((category) => !state.hidden.has(category));
+        const categoryTotals = visible
+          .map((category) => ({ category, total: weeks.reduce((sum, week) => sum + (week.byCategory[category] || 0), 0) }))
+          .sort((a, b) => b.total - a.total);
+        const total = weeks.reduce((sum, week) => sum + week.total, 0);
+        return { start, today, weeks, categories, visible, categoryTotals, total };
+      }
+
+      // ---------- tooltip ----------
+      const tooltip = document.getElementById("tooltip");
+
+      const TOOLTIP_MAX_ROWS = 8;
+
+      // One tooltip row per expense: amount, title, date. Biggest first.
+      function expenseRows(items, color) {
+        return [...items]
+          .sort((a, b) => b.amount - a.amount)
+          .map((item) => ({ color, value: formatMoney(item.amount), name: item.title || "Untitled", meta: formatDay(item.day) }));
+      }
+
+      function showTooltip(event, title, rows, totalRow) {
+        tooltip.replaceChildren();
+        const titleEl = document.createElement("div");
+        titleEl.className = "tt-title";
+        titleEl.textContent = title;
+        tooltip.append(titleEl);
+        const addRow = (row, extraClass) => {
+          const el = document.createElement("div");
+          el.className = `tt-row${extraClass ? ` ${extraClass}` : ""}`;
+          if (row.color) {
+            const key = document.createElement("span");
+            key.className = "tt-key";
+            key.style.background = row.color;
+            el.append(key);
+          }
+          const value = document.createElement("span");
+          value.className = "tt-value";
+          value.textContent = row.value;
+          const name = document.createElement("span");
+          name.className = "tt-name";
+          name.textContent = row.name;
+          el.append(value, name);
+          if (row.meta) {
+            const meta = document.createElement("span");
+            meta.className = "tt-meta";
+            meta.textContent = row.meta;
+            el.append(meta);
+          }
+          tooltip.append(el);
+        };
+        rows.slice(0, TOOLTIP_MAX_ROWS).forEach((row) => addRow(row));
+        if (rows.length > TOOLTIP_MAX_ROWS) {
+          const more = document.createElement("div");
+          more.className = "tt-more";
+          more.textContent = `+ ${rows.length - TOOLTIP_MAX_ROWS} more (see table below)`;
+          tooltip.append(more);
+        }
+        if (totalRow) addRow(totalRow, "tt-total");
+        tooltip.classList.add("visible");
+        positionTooltip(event);
+      }
+
+      function positionTooltip(event) {
+        let x;
+        let y;
+        if (event.clientX !== undefined && event.type.startsWith("pointer")) {
+          x = event.clientX;
+          y = event.clientY;
+        } else {
+          const rect = event.currentTarget.getBoundingClientRect();
+          x = rect.left + rect.width / 2;
+          y = rect.top;
+        }
+        const { width, height } = tooltip.getBoundingClientRect();
+        const left = Math.min(Math.max(8, x + 14), window.innerWidth - width - 8);
+        const top = y - height - 12 < 8 ? y + 16 : y - height - 12;
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+      }
+
+      function hideTooltip() {
+        tooltip.classList.remove("visible");
+      }
+
+      function bindTooltip(el, build) {
+        el.addEventListener("pointerenter", (event) => build(event));
+        el.addEventListener("pointermove", positionTooltip);
+        el.addEventListener("pointerleave", hideTooltip);
+        el.addEventListener("focus", (event) => build(event));
+        el.addEventListener("blur", hideTooltip);
+      }
+
+      // ---------- charts ----------
+      function svgEl(tag, attrs = {}) {
+        const el = document.createElementNS(SVG_NS, tag);
+        Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+        return el;
+      }
+
+      function niceMax(value) {
+        if (value <= 0) return 100;
+        const magnitude = 10 ** Math.floor(Math.log10(value));
+        const step = [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((s) => value / s <= 5);
+        return Math.ceil(value / step) * step;
+      }
+
+      function weekLabel(week) {
+        const sameMonth = week.start.getMonth() === week.end.getMonth();
+        return `${formatDay(week.start)}–${sameMonth ? week.end.getDate() : formatDay(week.end)}`;
+      }
+
+      function renderLegend(model) {
+        const legend = document.getElementById("legend");
+        legend.replaceChildren();
+        model.categories.forEach((category) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.setAttribute("aria-pressed", String(!state.hidden.has(category)));
+          const swatch = document.createElement("span");
+          swatch.className = "swatch";
+          swatch.style.background = categoryColor(category);
+          const label = document.createElement("span");
+          label.textContent = category;
+          button.append(swatch, label);
+          button.addEventListener("click", () => {
+            if (state.hidden.has(category)) state.hidden.delete(category);
+            else state.hidden.add(category);
+            render();
+          });
+          legend.append(button);
+        });
+      }
+
+      function renderWeeklyChart(model) {
+        const container = document.getElementById("weeklyChart");
+        container.replaceChildren();
+        if (!model.total) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "No spending in this range yet.";
+          container.append(empty);
+          return;
+        }
+
+        const width = Math.max(280, container.clientWidth);
+        const height = 280;
+        const margin = { top: 24, right: 8, bottom: 40, left: 52 };
+        const plotW = width - margin.left - margin.right;
+        const plotH = height - margin.top - margin.bottom;
+        const isLine = state.chartType === "line";
+        // Lines are not stacked, so their scale follows the largest single category-week.
+        const peak = isLine
+          ? Math.max(...model.weeks.flatMap((week) => model.visible.map((category) => week.byCategory[category] || 0)))
+          : Math.max(...model.weeks.map((week) => week.total));
+        const maxValue = niceMax(peak);
+        const y = (value) => margin.top + plotH - (value / maxValue) * plotH;
+        const band = plotW / model.weeks.length;
+        const barWidth = Math.min(24, band * 0.6);
+        const labelEvery = Math.ceil(model.weeks.length / Math.max(1, Math.floor(plotW / 64)));
+
+        const svg = svgEl("svg", {
+          viewBox: `0 0 ${width} ${height}`,
+          height,
+          role: "img",
+          "aria-label": isLine ? "Weekly spend by category, one line per category" : "Weekly spend by category, stacked columns",
+        });
+
+        for (let i = 0; i <= 4; i += 1) {
+          const value = (maxValue / 4) * i;
+          const yy = Math.round(y(value)) + 0.5;
+          svg.append(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: yy, y2: yy, stroke: i === 0 ? "var(--baseline)" : "var(--grid)", "stroke-width": 1 }));
+          const tick = svgEl("text", { x: margin.left - 8, y: yy + 4, "text-anchor": "end", class: "tick" });
+          tick.textContent = formatAxis(value);
+          svg.append(tick);
+        }
+
+        const defs = svgEl("defs");
+        svg.append(defs);
+
+        const xCenter = (i) => margin.left + band * i + band / 2;
+
+        if (isLine) {
+          renderLines(svg, model, { xCenter, y, band, top: margin.top, bottom: margin.top + plotH });
+        }
+
+        model.weeks.forEach((week, i) => {
+          const cx = xCenter(i);
+          const x0 = cx - barWidth / 2;
+
+          if (i % labelEvery === 0 || week.isCurrent) {
+            const label = svgEl("text", { x: cx, y: height - margin.bottom + 18, "text-anchor": "middle", class: "tick" });
+            label.textContent = weekLabel(week);
+            svg.append(label);
+            if (week.isCurrent || week.isPartial) {
+              const note = svgEl("text", { x: cx, y: height - margin.bottom + 33, "text-anchor": "middle", class: "tick" });
+              note.textContent = week.isCurrent ? "this week" : "partial";
+              svg.append(note);
+            }
+          }
+          if (isLine || !week.total) return;
+
+          // Rounded 4px data-end, square at the baseline, via a clip on the whole column.
+          const top = y(week.total);
+          const base = y(0);
+          const r = Math.min(4, (base - top) / 2, barWidth / 2);
+          const clipId = `col-${i}`;
+          const clip = svgEl("clipPath", { id: clipId });
+          clip.append(svgEl("path", {
+            d: `M${x0},${base}V${top + r}Q${x0},${top} ${x0 + r},${top}H${x0 + barWidth - r}Q${x0 + barWidth},${top} ${x0 + barWidth},${top + r}V${base}Z`,
+          }));
+          defs.append(clip);
+
+          const column = svgEl("g", { "clip-path": `url(#${clipId})` });
+          let running = 0;
+          const stack = model.visible.filter((category) => week.byCategory[category]);
+          stack.forEach((category, s) => {
+            const amount = week.byCategory[category];
+            const y1 = y(running);
+            const y2 = y(running + amount);
+            running += amount;
+            // 2px surface gap between stacked segments.
+            const gap = s === 0 ? 0 : 2;
+            const segHeight = Math.max(0, y1 - y2 - gap);
+            if (!segHeight) return;
+
+            const hit = svgEl("g", { class: "hit", tabindex: 0, role: "img", "aria-label": `${weekLabel(week)}: ${category} ${formatMoney(amount)}` });
+            hit.append(svgEl("rect", { class: "seg", x: x0, y: y2, width: barWidth, height: segHeight, fill: categoryColor(category) }));
+            // Invisible, wider hit area so the segment is easy to hover.
+            hit.append(svgEl("rect", { x: cx - Math.max(barWidth, Math.min(band, 40)) / 2, y: y2, width: Math.max(barWidth, Math.min(band, 40)), height: Math.max(segHeight, 6), fill: "transparent" }));
+            bindTooltip(hit, (event) =>
+              showTooltip(
+                event,
+                `${category} · week of ${weekLabel(week)}${week.isCurrent ? " (this week)" : ""}`,
+                expenseRows(week.items[category], categoryColor(category)),
+                { value: formatMoney(amount), name: `${category} total · week ${formatMoney(week.total)}` },
+              ),
+            );
+            column.append(hit);
+          });
+          svg.append(column);
+
+          const cap = svgEl("text", { x: cx, y: top - 7, "text-anchor": "middle", class: "cap-label" });
+          cap.textContent = formatAxis(week.total);
+          svg.append(cap);
+        });
+
+        container.append(svg);
+      }
+
+      // One line per visible category; a full-height hit band per week shows that week's breakdown.
+      function renderLines(svg, model, { xCenter, y, band, top, bottom }) {
+        const dotRadius = model.weeks.length > 20 ? 2.5 : 3.5;
+        model.visible.forEach((category) => {
+          const points = model.weeks.map((week, i) => [xCenter(i), y(week.byCategory[category] || 0)]);
+          const color = categoryColor(category);
+          svg.append(svgEl("path", {
+            d: points.map(([px, py], i) => `${i ? "L" : "M"}${px},${py}`).join(""),
+            fill: "none",
+            stroke: color,
+            "stroke-width": 2,
+            "stroke-linejoin": "round",
+            "stroke-linecap": "round",
+          }));
+          points.forEach(([px, py]) => {
+            svg.append(svgEl("circle", { cx: px, cy: py, r: dotRadius, fill: color, stroke: "var(--surface-1)", "stroke-width": 1.5 }));
+          });
+        });
+
+        model.weeks.forEach((week, i) => {
+          const cx = xCenter(i);
+          const rows = model.visible
+            .filter((category) => week.byCategory[category])
+            .map((category) => ({ category, amount: week.byCategory[category] }))
+            .sort((a, b) => b.amount - a.amount);
+          const hit = svgEl("g", {
+            class: "hit week-band",
+            tabindex: 0,
+            role: "img",
+            "aria-label": `${weekLabel(week)}: ${rows.map((row) => `${row.category} ${formatMoney(row.amount)}`).join(", ") || "no spending"}`,
+          });
+          hit.append(svgEl("line", { class: "crosshair", x1: cx, x2: cx, y1: top, y2: bottom, "stroke-width": 1 }));
+          hit.append(svgEl("rect", { x: cx - band / 2, y: top, width: band, height: bottom - top, fill: "transparent" }));
+          bindTooltip(hit, (event) =>
+            showTooltip(
+              event,
+              `Week of ${weekLabel(week)}${week.isCurrent ? " (this week)" : ""}`,
+              rows.map((row) => ({ color: categoryColor(row.category), value: formatMoney(row.amount), name: row.category })),
+              { value: formatMoney(week.total), name: "week total" },
+            ),
+          );
+          // Insert bands beneath the lines so the lines and dots stay on top.
+          svg.insertBefore(hit, svg.querySelector("path") || null);
+        });
+      }
+
+      // One point per day from range start to today; respects hidden categories.
+      function buildDays(model) {
+        const count = Math.round((model.today - model.start) / DAY) + 1;
+        const days = Array.from({ length: count }, (_, i) => ({ date: addDays(model.start, i), total: 0, items: [], running: 0 }));
+        model.weeks.forEach((week) => {
+          Object.values(week.items).flat().forEach((item) => {
+            const day = days[Math.round((startOfDay(item.day) - model.start) / DAY)];
+            if (!day) return;
+            day.total += item.amount;
+            day.items.push(item);
+          });
+        });
+        // Running total is month-to-date: it resets on the 1st of each month.
+        let running = 0;
+        days.forEach((day) => {
+          if (day.date.getDate() === 1) running = 0;
+          running += day.total;
+          day.running = running;
+        });
+        return days;
+      }
+
+      function renderTrendChart(model) {
+        const container = document.getElementById("trendChart");
+        container.replaceChildren();
+        const cumulative = state.trendMode === "cumulative";
+        document.getElementById("trendSub").textContent = cumulative
+          ? "Month-to-date running total, resetting on the 1st of each month"
+          : "Spending per day in the selected range";
+        if (!model.total) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "No spending in this range yet.";
+          container.append(empty);
+          return;
+        }
+
+        const days = buildDays(model);
+        const valueOf = (day) => (cumulative ? day.running : day.total);
+        const width = Math.max(280, container.clientWidth);
+        const height = 240;
+        const margin = { top: 16, right: 12, bottom: 28, left: 52 };
+        const plotW = width - margin.left - margin.right;
+        const plotH = height - margin.top - margin.bottom;
+        const maxValue = niceMax(Math.max(...days.map(valueOf)));
+        const step = days.length > 1 ? plotW / (days.length - 1) : 0;
+        const x = (i) => margin.left + (days.length > 1 ? step * i : plotW / 2);
+        const y = (value) => margin.top + plotH - (value / maxValue) * plotH;
+        const color = "var(--series-1)";
+
+        const svg = svgEl("svg", {
+          viewBox: `0 0 ${width} ${height}`,
+          height,
+          role: "img",
+          "aria-label": cumulative ? "Cumulative spending by day, line chart" : "Daily spending, line chart",
+        });
+
+        for (let i = 0; i <= 4; i += 1) {
+          const value = (maxValue / 4) * i;
+          const yy = Math.round(y(value)) + 0.5;
+          svg.append(svgEl("line", { x1: margin.left, x2: width - margin.right, y1: yy, y2: yy, stroke: i === 0 ? "var(--baseline)" : "var(--grid)", "stroke-width": 1 }));
+          const tick = svgEl("text", { x: margin.left - 8, y: yy + 4, "text-anchor": "end", class: "tick" });
+          tick.textContent = formatAxis(value);
+          svg.append(tick);
+        }
+
+        const labelEvery = Math.max(1, Math.ceil(days.length / Math.max(1, Math.floor(plotW / 64))));
+        days.forEach((day, i) => {
+          if (i % labelEvery !== 0 && i !== days.length - 1) return;
+          if (i !== days.length - 1 && days.length - 1 - i < labelEvery / 2) return;
+          const anchor = days.length === 1 ? "middle" : i === 0 ? "start" : i === days.length - 1 ? "end" : "middle";
+          const label = svgEl("text", { x: x(i), y: height - margin.bottom + 18, "text-anchor": anchor, class: "tick" });
+          label.textContent = i === days.length - 1 ? "Today" : formatDay(day.date);
+          svg.append(label);
+        });
+
+        const points = days.map((day, i) => [x(i), y(valueOf(day))]);
+        const base = y(0);
+        // Cumulative mode draws one segment per month so the reset isn't drawn as a drop.
+        const segments = [];
+        days.forEach((day, i) => {
+          if (!segments.length || (cumulative && day.date.getDate() === 1)) segments.push([]);
+          segments[segments.length - 1].push(points[i]);
+        });
+        segments.forEach((segment, s) => {
+          const line = segment.map(([px, py], i) => `${i ? "L" : "M"}${px},${py}`).join("");
+          svg.append(svgEl("path", { d: `${line}L${segment[segment.length - 1][0]},${base}L${segment[0][0]},${base}Z`, fill: color, "fill-opacity": 0.1 }));
+          svg.append(svgEl("path", { d: line, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+          if (s > 0) {
+            const mx = Math.round(segment[0][0] - step / 2) + 0.5;
+            svg.append(svgEl("line", { x1: mx, x2: mx, y1: margin.top, y2: base, stroke: "var(--baseline)", "stroke-width": 1, "stroke-dasharray": "3 3" }));
+            const monthLabel = svgEl("text", { x: mx + 4, y: margin.top + 10, class: "tick" });
+            monthLabel.textContent = days[days.findIndex((d, i) => points[i] === segment[0])].date.toLocaleDateString("en-US", { month: "short" });
+            svg.append(monthLabel);
+          }
+        });
+        if (days.length <= 45) {
+          points.forEach(([px, py]) => svg.append(svgEl("circle", { cx: px, cy: py, r: 2.5, fill: color, stroke: "var(--surface-1)", "stroke-width": 1.5 })));
+        }
+
+        const bandW = days.length > 1 ? step : plotW;
+        days.forEach((day, i) => {
+          const [px, py] = points[i];
+          const hit = svgEl("g", {
+            class: "hit day-band",
+            tabindex: 0,
+            role: "img",
+            "aria-label": `${formatDay(day.date)}: ${formatMoney(day.total)} spent, ${formatMoney(day.running)} month to date`,
+          });
+          hit.append(svgEl("line", { class: "crosshair", x1: px, x2: px, y1: margin.top, y2: base, "stroke-width": 1 }));
+          hit.append(svgEl("rect", { x: px - bandW / 2, y: margin.top, width: bandW, height: plotH, fill: "transparent" }));
+          hit.append(svgEl("circle", { class: "hover-dot", cx: px, cy: py, r: 4.5, fill: color, stroke: "var(--surface-1)", "stroke-width": 2 }));
+          bindTooltip(hit, (event) =>
+            showTooltip(
+              event,
+              day.date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }),
+              day.items.length
+                ? [...day.items].sort((a, b) => b.amount - a.amount).map((item) => ({ color: categoryColor(item.category), value: formatMoney(item.amount), name: item.title || "Untitled", meta: item.category }))
+                : [{ value: "—", name: "No spending" }],
+              cumulative
+                ? { value: formatMoney(day.running), name: `${day.date.toLocaleDateString("en-US", { month: "short" })} to date · ${formatMoney(day.total)} this day` }
+                : { value: formatMoney(day.total), name: "day total" },
+            ),
+          );
+          svg.append(hit);
+        });
+
+        container.append(svg);
+      }
+
+      function renderCategoryRows(model) {
+        const container = document.getElementById("categoryRows");
+        container.replaceChildren();
+        const rows = model.categoryTotals.filter((row) => row.total > 0);
+        if (!rows.length) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "No category spending in this range.";
+          container.append(empty);
+          return;
+        }
+        const max = rows[0].total;
+        rows.forEach(({ category, total }) => {
+          const share = model.total ? (total / model.total) * 100 : 0;
+          const row = document.createElement("div");
+          row.className = "cat-row";
+          row.tabIndex = 0;
+
+          const name = document.createElement("div");
+          name.className = "cat-name";
+          const swatch = document.createElement("span");
+          swatch.className = "swatch";
+          swatch.style.background = categoryColor(category);
+          const label = document.createElement("span");
+          label.textContent = category;
+          name.append(swatch, label);
+
+          const wrap = document.createElement("div");
+          wrap.className = "cat-bar-wrap";
+          const bar = document.createElement("div");
+          bar.className = "cat-bar";
+          bar.style.background = categoryColor(category);
+          bar.style.width = `calc((100% - 150px) * ${total / max})`;
+          const value = document.createElement("span");
+          value.className = "cat-value";
+          value.textContent = moneyRound.format(total);
+          const shareEl = document.createElement("span");
+          shareEl.className = "share";
+          shareEl.textContent = `${share.toFixed(0)}%`;
+          value.append(shareEl);
+          wrap.append(bar, value);
+
+          row.append(name, wrap);
+          const items = model.weeks.flatMap((week) => week.items[category] || []);
+          bindTooltip(row, (event) =>
+            showTooltip(event, `${category} · ${items.length} expense${items.length === 1 ? "" : "s"}`, expenseRows(items, categoryColor(category)), {
+              value: formatMoney(total),
+              name: `${share.toFixed(1)}% of spending`,
+            }),
+          );
+          container.append(row);
+        });
+        const hiddenCount = model.categories.length - model.visible.length;
+        document.getElementById("categorySub").textContent = hiddenCount
+          ? `Share of spending in the selected range (${hiddenCount} hidden)`
+          : "Share of spending in the selected range";
+      }
+
+      function renderTable(model) {
+        const wrap = document.getElementById("tableWrap");
+        wrap.replaceChildren();
+        if (!model.total) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "Nothing to show yet.";
+          wrap.append(empty);
+          return;
+        }
+        const table = document.createElement("table");
+        const thead = table.createTHead().insertRow();
+        const addCell = (row, text, tag = "td", className) => {
+          const cell = document.createElement(tag);
+          if (className) cell.className = className;
+          if (text instanceof Node) cell.append(text);
+          else cell.textContent = text;
+          row.append(cell);
+          return cell;
+        };
+        addCell(thead, "Week", "th");
+        model.visible.forEach((category) => {
+          const label = document.createElement("span");
+          label.className = "th-cat";
+          const swatch = document.createElement("span");
+          swatch.className = "swatch";
+          swatch.style.background = categoryColor(category);
+          const text = document.createElement("span");
+          text.textContent = category;
+          label.append(swatch, text);
+          addCell(thead, label, "th");
+        });
+        addCell(thead, "Total", "th");
+        addCell(thead, "vs prev", "th");
+
+        const tbody = table.createTBody();
+        [...model.weeks].reverse().forEach((week, index, list) => {
+          const row = tbody.insertRow();
+          const suffix = week.isCurrent ? " (this week)" : week.isPartial ? " (partial)" : "";
+          addCell(row, `${weekLabel(week)}${suffix}`);
+          model.visible.forEach((category) => {
+            const amount = week.byCategory[category] || 0;
+            addCell(row, amount ? formatMoney(amount) : "—", "td", amount ? "" : "zero");
+          });
+          addCell(row, formatMoney(week.total));
+          const previous = list[index + 1];
+          if (!previous || !previous.total) {
+            addCell(row, "—", "td", "zero");
+          } else {
+            const change = ((week.total - previous.total) / previous.total) * 100;
+            addCell(row, `${change > 0 ? "↑" : change < 0 ? "↓" : ""} ${Math.abs(change).toFixed(0)}%`, "td", change > 0 ? "delta-up" : change < 0 ? "delta-down" : "");
+          }
+        });
+
+        const foot = table.createTFoot().insertRow();
+        addCell(foot, "Total");
+        model.visible.forEach((category) => {
+          addCell(foot, formatMoney(model.weeks.reduce((sum, week) => sum + (week.byCategory[category] || 0), 0)));
+        });
+        addCell(foot, formatMoney(model.total));
+        addCell(foot, "");
+        wrap.append(table);
+      }
+
+      function renderTiles(model) {
+        const set = (id, text, className = "") => {
+          const el = document.getElementById(id);
+          el.textContent = text;
+          el.className = el.className.split(" ").filter((c) => !c.startsWith("delta")).concat(className || []).join(" ");
+        };
+        // Month-to-date, independent of the range filter; compared with the same days of last month.
+        const monthStart = new Date(model.today.getFullYear(), model.today.getMonth(), 1);
+        const prevStart = new Date(model.today.getFullYear(), model.today.getMonth() - 1, 1);
+        const prevEnd = new Date(prevStart.getFullYear(), prevStart.getMonth(), Math.min(model.today.getDate(), new Date(model.today.getFullYear(), model.today.getMonth(), 0).getDate()));
+        let monthTotal = 0;
+        let prevTotal = 0;
+        state.expenses.forEach((item) => {
+          if (INCOME_CATEGORIES.has(item.category) || state.hidden.has(item.category)) return;
+          const day = parseLocalDate(item.date);
+          const amount = Number(item.amount) || 0;
+          if (day >= monthStart && day <= model.today) monthTotal += amount;
+          else if (day >= prevStart && day <= prevEnd) prevTotal += amount;
+        });
+        const monthName = (date) => date.toLocaleDateString("en-US", { month: "long" });
+        document.getElementById("totalLabel").textContent = `Total spent in ${monthName(monthStart)}`;
+        set("totalValue", formatMoney(monthTotal));
+        const totalMeta = document.getElementById("totalMeta");
+        totalMeta.replaceChildren(`${formatDay(monthStart)} – ${formatDay(model.today)}`);
+        if (prevTotal) {
+          const change = ((monthTotal - prevTotal) / prevTotal) * 100;
+          const delta = document.createElement("span");
+          delta.className = change > 0 ? "delta-up" : change < 0 ? "delta-down" : "";
+          delta.textContent = `${change > 0 ? "↑" : change < 0 ? "↓" : "="} ${Math.abs(change).toFixed(0)}%`;
+          totalMeta.append(" · ", delta, ` vs same days of ${monthName(prevStart)} (${moneyRound.format(prevTotal)})`);
+        }
+
+        const current = model.weeks[model.weeks.length - 1];
+        const previous = model.weeks[model.weeks.length - 2];
+        set("weekValue", formatMoney(current.total));
+        const meta = document.getElementById("weekMeta");
+        meta.replaceChildren();
+        if (previous && previous.total) {
+          const change = ((current.total - previous.total) / previous.total) * 100;
+          const delta = document.createElement("span");
+          delta.className = change > 0 ? "delta-up" : change < 0 ? "delta-down" : "";
+          delta.textContent = `${change > 0 ? "↑" : change < 0 ? "↓" : "="} ${Math.abs(change).toFixed(0)}%`;
+          meta.append(delta, document.createTextNode(` vs last week (${moneyRound.format(previous.total)})`));
+        } else {
+          meta.textContent = "No spending last week to compare";
+        }
+
+        const full = model.weeks.filter((week) => !week.isCurrent && !week.isPartial);
+        const average = full.length ? full.reduce((sum, week) => sum + week.total, 0) / full.length : 0;
+        set("avgValue", full.length ? formatMoney(average) : "—");
+        set("avgMeta", full.length ? `Over ${full.length} full week${full.length === 1 ? "" : "s"}` : "Needs one full week");
+
+        const top = model.categoryTotals[0];
+        if (top && top.total) {
+          set("topValue", top.category);
+          set("topMeta", `${formatMoney(top.total)} · ${((top.total / model.total) * 100).toFixed(0)}% of spending`);
+        } else {
+          set("topValue", "—");
+          set("topMeta", "");
+        }
+      }
+
+      function render() {
+        const model = buildModel();
+        document.querySelectorAll("#rangeButtons button").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.range === state.range));
+        });
+        document.querySelectorAll("#chartTypeButtons button").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.chart === state.chartType));
+        });
+        document.getElementById("rangeText").textContent =
+          `${formatDay(model.start)} – ${formatDay(model.today)}, ${model.weeks.length} week${model.weeks.length === 1 ? "" : "s"}`;
+        renderTiles(model);
+        renderLegend(model);
+        document.querySelectorAll("#trendModeButtons button").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.trend === state.trendMode));
+        });
+        renderWeeklyChart(model);
+        renderTrendChart(model);
+        renderCategoryRows(model);
+        renderTable(model);
+      }
+
+      async function load() {
+        const app = document.getElementById("app");
+        app.classList.add("loading");
+        try {
+          const response = await fetch(`${API_BASE}/api/expenses`);
+          if (!response.ok) throw new Error(`Server responded ${response.status}`);
+          state.expenses = await response.json();
+          render();
+        } catch (error) {
+          render();
+          const text = document.getElementById("rangeText");
+          text.textContent = `Can't reach the expense server at ${API_BASE || location.origin}. Start it with: python3 backend/server.py`;
+          text.classList.add("error");
+        } finally {
+          app.classList.remove("loading");
+        }
+      }
+
+      document.getElementById("rangeButtons").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-range]");
+        if (!button) return;
+        state.range = button.dataset.range;
+        try { localStorage.setItem("expenseos-dashboard-range", state.range); } catch {}
+        render();
+      });
+      document.getElementById("chartTypeButtons").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-chart]");
+        if (!button) return;
+        state.chartType = button.dataset.chart;
+        try { localStorage.setItem("expenseos-dashboard-chart", state.chartType); } catch {}
+        hideTooltip();
+        render();
+      });
+      document.getElementById("trendModeButtons").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-trend]");
+        if (!button) return;
+        state.trendMode = button.dataset.trend;
+        try { localStorage.setItem("expenseos-dashboard-trend", state.trendMode); } catch {}
+        hideTooltip();
+        render();
+      });
+      document.getElementById("refreshButton").addEventListener("click", load);
+      window.addEventListener("focus", load);
+
+      let resizeTimer;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(render, 120);
+      });
+
+      load();
+    </script>
+  </body>
+</html>

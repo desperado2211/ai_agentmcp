@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07111f" />
+    <title>ExpenseOS — Premium Expense Tracker</title>
+    <link rel="stylesheet" href="styles.css?v=9" />
+  </head>
+  <body class="theme-dark">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">✦</div>
+          <div>
+            <p class="brand-name">Desperados Wallet</p>
+            <span class="brand-subtitle">Premium finance</span>
+          </div>
+        </div>
+
+        <nav class="nav-links">
+          <button class="nav-link active" type="button" data-target="dashboard">Dashboard</button>
+          <button class="nav-link" type="button" data-target="transactions">Transactions</button>
+          <button class="nav-link" type="button" data-target="budgets">Budgets</button>
+          <button class="nav-link" type="button" data-target="analytics">Analytics</button>
+          <button class="nav-link" type="button" data-target="settings">Settings</button>
+          <a class="nav-link" href="dashboard.html">Spending dashboard ↗</a>
+        </nav>
+
+        <div class="sidebar-card">
+          <h4>Monthly target</h4>
+          <p>You're on pace to stay within budget this month.</p>
+        </div>
+      </aside>
+
+      <main class="main-content" id="dashboard">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Good evening</p>
+            <h1>Keep your spending intentional.</h1>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-box">
+              <span>⌕</span>
+              <input id="searchInput" type="search" placeholder="Search transactions" />
+            </label>
+            <button id="themeToggle" class="icon-btn" type="button">☀</button>
+            <button id="exportButton" class="primary-btn" type="button">Export CSV</button>
+          </div>
+        </header>
+
+        <section class="hero-card">
+          <div>
+            <p class="hero-label">Overview</p>
+            <h2>Track income, spending, and savings in one elegant view.</h2>
+            <p class="hero-text">A modern personal finance workspace designed for calm, confident decision-making.</p>
+          </div>
+          <div id="heroBadge" class="hero-badge">+0.0% this month</div>
+        </section>
+
+        <section class="stats-grid">
+          <article class="stat-card accent-blue">
+            <div class="stat-top">
+              <span class="stat-title">Total expenses</span>
+              <span class="stat-pill">Live</span>
+            </div>
+            <div id="totalSpent" class="stat-value">$0.00</div>
+            <p class="stat-meta">This month</p>
+          </article>
+          <article class="stat-card accent-green">
+            <div class="stat-top">
+              <span class="stat-title">Income</span>
+              <span class="stat-pill">Stable</span>
+            </div>
+            <div id="incomeValue" class="stat-value">$0.00</div>
+            <p class="stat-meta">Projected</p>
+          </article>
+          <article class="stat-card accent-purple">
+            <div class="stat-top">
+              <span class="stat-title">Savings</span>
+              <span class="stat-pill">Healthy</span>
+            </div>
+            <div id="savingsValue" class="stat-value">$0.00</div>
+            <p class="stat-meta">Remaining buffer</p>
+          </article>
+          <article class="stat-card accent-amber">
+            <div class="stat-top">
+              <span class="stat-title">Today</span>
+              <span class="stat-pill">Active</span>
+            </div>
+            <div id="todaySpent" class="stat-value">$0.00</div>
+            <p class="stat-meta">Spending today</p>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel panel-form">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Expense entry</p>
+                <h3 id="formTitle">Add a new expense</h3>
+              </div>
+              <button id="resetButton" class="ghost-btn" type="button">Reset</button>
+            </div>
+
+            <form id="expenseForm" class="expense-form">
+              <input type="hidden" id="expenseId" />
+              <label>
+                Title
+                <input id="title" type="text" placeholder="Dinner reservation" required />
+              </label>
+              <label>
+                Amount
+                <input id="amount" type="number" min="0" step="0.01" placeholder="48.00" required />
+              </label>
+              <label>
+                Category
+                <select id="category" required>
+                  <option value="Food">Food</option>
+                  <option value="Grocery">Grocery</option>
+                  <option value="Transport">Transport</option>
+                  <option value="Shopping">Shopping</option>
+                  <option value="Bills">Bills</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Salary">Salary</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+              <label>
+                Merchant
+                <input id="merchant" type="text" placeholder="Blue Bottle" />
+              </label>
+              <label>
+                Payment method
+                <select id="paymentMethod">
+                  <option value="">Select payment method</option>
+                  <option value="Chase Explorer">Chase Explorer</option>
+                  <option value="AMEX">AMEX</option>
+                  <option value="Gemini">Gemini</option>
+                  <option value="Chase Prime">Chase Prime</option>
+                  <option value="Discover">Discover</option>
+                  <option value="Apple">Apple</option>
+                  <option value="Barclays">Barclays</option>
+                  <option value="BOFA">BOFA</option>
+                </select>
+              </label>
+              <label>
+                Date
+                <input id="date" type="date" required />
+              </label>
+              <label>
+                Notes
+                <textarea id="notes" rows="3" placeholder="Optional details"></textarea>
+              </label>
+              <label class="checkbox-row">
+                <input id="recurring" type="checkbox" />
+                <span>Recurring expense</span>
+              </label>
+              <button class="primary-btn" id="submitButton" type="submit">Save expense</button>
+            </form>
+          </div>
+
+          <div class="panel panel-list" id="transactions">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Transactions</p>
+                <h3>Recent activity</h3>
+              </div>
+              <select id="categoryFilter" class="filter-select">
+                <option value="all">All categories</option>
+                <option value="Food">Food</option>
+                <option value="Grocery">Grocery</option>
+                <option value="Transport">Transport</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Bills">Bills</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Travel">Travel</option>
+                <option value="Salary">Salary</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div id="transactionList" class="transaction-list"></div>
+          </div>
+        </section>
+
+        <section class="insights-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Budget</p>
+                <h3>Monthly limits</h3>
+              </div>
+            </div>
+            <div class="budget-card">
+              <div class="budget-row">
+                <span>Monthly budget</span>
+                <strong id="budgetStatus">$0 of $0</strong>
+              </div>
+              <div class="progress-bar"><div id="budgetBar" class="progress-fill"></div></div>
+              <p id="budgetWarning" class="budget-warning">Within budget</p>
+            </div>
+          </div>
+
+          <div class="panel" id="analytics">
+            <div class="panel-header">
+              <div>
+                <p class="panel-kicker">Trends</p>
+                <h3>Where you're spending more</h3>
+              </div>
+            </div>
+            <div id="trendList" class="trend-list"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">History</p>
+              <h3>Monthly spend</h3>
+            </div>
+          </div>
+          <div id="monthlyHistoryList" class="trend-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="panel-kicker">Weekly</p>
+              <h3>Weekly spend since Oct 1</h3>
+            </div>
+            <span id="weeklyTrendBadge" class="trends-caption"></span>
+          </div>
+          <div id="weeklySummary" class="weekly-summary"></div>
+          <div id="weeklyTrendList" class="trend-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
