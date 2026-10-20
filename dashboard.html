@@ -281,8 +281,9 @@
 
     <div class="tooltip" id="tooltip" role="tooltip"></div>
 
+    <script src="config.js"></script>
+    <script src="store.js"></script>
     <script>
-      const API_BASE = location.protocol.startsWith("http") && location.port === "3000" ? "" : "http://localhost:3000";
       const INCOME_CATEGORIES = new Set(["Salary"]);
       // Color follows the category, never its rank. "Other" (and anything unknown) is the neutral fold.
       const CATEGORY_SLOTS = ["Food", "Bills", "Grocery", "Transport", "Shopping", "Entertainment", "Healthcare", "Travel"];
@@ -1023,14 +1024,13 @@
         const app = document.getElementById("app");
         app.classList.add("loading");
         try {
-          const response = await fetch(`${API_BASE}/api/expenses`);
-          if (!response.ok) throw new Error(`Server responded ${response.status}`);
-          state.expenses = await response.json();
+          await ExpenseStore.ready();
+          state.expenses = await ExpenseStore.list();
           render();
         } catch (error) {
           render();
           const text = document.getElementById("rangeText");
-          text.textContent = `Can't reach the expense server at ${API_BASE || location.origin}. Start it with: python3 backend/server.py`;
+          text.textContent = ExpenseStore.unreachableMessage;
           text.classList.add("error");
         } finally {
           app.classList.remove("loading");

@@ -1,6 +1,4 @@
 const storageKey = "expenseos-expenses";
-// Same origin when the page is served by backend/server.py; otherwise talk to it directly.
-const API_BASE = location.protocol.startsWith("http") && location.port === "3000" ? "" : "http://localhost:3000";
 const monthlyBudget = 6000;
 const categoryLimit = 200;
 
@@ -50,20 +48,6 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-async function api(path, options = {}) {
-  const response = await fetch(`${API_BASE}/api/expenses${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json" },
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error(data.error || `Request failed (${response.status})`);
-    error.status = response.status;
-    throw error;
-  }
-  return data;
-}
-
 function showSyncError(message) {
   transactionList.innerHTML = `<div class="empty-state">${message}</div>`;
 }
@@ -80,7 +64,7 @@ async function migrateLocalExpenses() {
 
   for (const item of saved) {
     try {
-      await api("", { method: "POST", body: JSON.stringify(item) });
+      await ExpenseStore.create(item);
     } catch (error) {
       // 409 = already imported, 400 = invalid entry (still kept in the backup below).
       if (error.status !== 409 && error.status !== 400) throw error;
@@ -93,12 +77,13 @@ async function migrateLocalExpenses() {
 
 async function loadExpenses() {
   try {
+    await ExpenseStore.ready();
     await migrateLocalExpenses();
-    expenses = await api("");
+    expenses = await ExpenseStore.list();
   } catch (error) {
     expenses = [];
     render();
-    showSyncError(`Can't reach the expense server at ${API_BASE || location.origin}. Start it with: python3 backend/server.py`);
+    showSyncError(ExpenseStore.unreachableMessage);
     return;
   }
   render();
@@ -459,10 +444,10 @@ function render() {
 
 async function addOrUpdateExpense(payload) {
   if (editingId) {
-    const updated = await api(`/${encodeURIComponent(editingId)}`, { method: "PUT", body: JSON.stringify(payload) });
+    const updated = await ExpenseStore.update(editingId, payload);
     expenses = expenses.map((item) => (item.id === updated.id ? updated : item));
   } else {
-    const created = await api("", { method: "POST", body: JSON.stringify(payload) });
+    const created = await ExpenseStore.create(payload);
     expenses.unshift(created);
   }
   render();
@@ -566,7 +551,7 @@ document.addEventListener("click", async (event) => {
   if (deleteButton) {
     const id = deleteButton.dataset.id;
     try {
-      await api(`/${encodeURIComponent(id)}`, { method: "DELETE" });
+      await ExpenseStore.remove(id);
     } catch (error) {
       alert(`Couldn't delete expense: ${error.message}`);
       return;
