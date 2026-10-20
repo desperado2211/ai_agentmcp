@@ -45,7 +45,8 @@ function formatCurrency(value) {
 }
 
 function formatDate(value) {
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const date = value instanceof Date ? value : parseLocalDate(value);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function showSyncError(message) {
@@ -106,20 +107,20 @@ async function loadExpensesNow() {
 function getMonthlyExpenses() {
   const now = new Date();
   return expenses.filter((item) => {
-    const itemDate = new Date(item.date);
+    const itemDate = parseLocalDate(item.date);
     return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
   });
 }
 
 function getTodayExpenses() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayString();
   return expenses.filter((item) => item.date === today);
 }
 
 function getMonthTotal(date) {
   return expenses
     .filter((item) => {
-      const itemDate = new Date(item.date);
+      const itemDate = parseLocalDate(item.date);
       return itemDate.getMonth() === date.getMonth() && itemDate.getFullYear() === date.getFullYear();
     })
     .reduce((sum, item) => sum + Number(item.amount), 0);
@@ -140,7 +141,7 @@ function resetForm() {
   editingId = null;
   submitButton.textContent = "Save expense";
   formTitle.textContent = "Add a new expense";
-  dateInput.value = new Date().toISOString().slice(0, 10);
+  dateInput.value = todayString();
 }
 
 function setTheme(theme) {
@@ -222,7 +223,7 @@ function renderTrends() {
 
   const getMonthTotals = (date) => {
     const monthExpenses = expenses.filter((item) => {
-      const itemDate = new Date(item.date);
+      const itemDate = parseLocalDate(item.date);
       return itemDate.getMonth() === date.getMonth() && itemDate.getFullYear() === date.getFullYear();
     });
 
@@ -323,6 +324,12 @@ function renderMonthlyHistory() {
       `;
     })
     .join("");
+}
+
+// Today's date as "YYYY-MM-DD" in local time (toISOString() is UTC and is already tomorrow in the evening).
+function todayString() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
 // Parse "YYYY-MM-DD" as a local date (new Date("YYYY-MM-DD") is UTC and can shift a day).
@@ -503,7 +510,7 @@ exportButton.addEventListener("click", () => {
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `expenseos-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `expenseos-${todayString()}.csv`;
   link.click();
   URL.revokeObjectURL(link.href);
 });
@@ -578,6 +585,6 @@ document.addEventListener("click", async (event) => {
 const savedTheme = localStorage.getItem("expenseos-theme") || "dark";
 setTheme(savedTheme);
 resetForm();
-dateInput.value = new Date().toISOString().slice(0, 10);
+dateInput.value = todayString();
 render();
 loadExpenses();
