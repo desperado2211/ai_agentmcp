@@ -281,8 +281,8 @@
 
     <div class="tooltip" id="tooltip" role="tooltip"></div>
 
-    <script src="config.js"></script>
-    <script src="store.js"></script>
+    <script src="config.js?v=2"></script>
+    <script src="store.js?v=2"></script>
     <script>
       const INCOME_CATEGORIES = new Set(["Salary"]);
       // Color follows the category, never its rank. "Other" (and anything unknown) is the neutral fold.
@@ -1020,12 +1020,19 @@
         renderTable(model);
       }
 
-      async function load() {
+      let loading = null;
+      function load() {
+        loading ||= loadNow().finally(() => (loading = null));
+        return loading;
+      }
+
+      async function loadNow() {
         const app = document.getElementById("app");
         app.classList.add("loading");
         try {
           await ExpenseStore.ready();
           state.expenses = await ExpenseStore.list();
+          document.getElementById("rangeText").classList.remove("error");
           render();
         } catch (error) {
           render();
@@ -1062,6 +1069,13 @@
       });
       document.getElementById("refreshButton").addEventListener("click", load);
       window.addEventListener("focus", load);
+      // Phones rarely fire focus: reload when the tab becomes visible or the page is restored by Back.
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") load();
+      });
+      window.addEventListener("pageshow", (event) => {
+        if (event.persisted) load();
+      });
 
       let resizeTimer;
       window.addEventListener("resize", () => {

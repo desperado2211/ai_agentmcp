@@ -56,6 +56,7 @@
   const TOKEN_KEY = "expenseos-github-token";
   const repo = config.githubDataRepo;
   const filePath = config.githubDataPath || "expenses.json";
+  const branch = config.githubDataBranch || "main";
   let token = "";
   try {
     token = localStorage.getItem(TOKEN_KEY) || "";
@@ -85,9 +86,11 @@
 
   const contentsUrl = () => `/repos/${repo}/contents/${filePath.split("/").map(encodeURIComponent).join("/")}`;
 
+  // Read at the branch's latest commit: reading by branch name can return the old file for a while after a save.
   async function readFile() {
     try {
-      const data = await github(contentsUrl());
+      const head = await github(`/repos/${repo}/git/ref/heads/${encodeURIComponent(branch)}`);
+      const data = await github(`${contentsUrl()}?ref=${head.object.sha}`);
       const items = JSON.parse(fromBase64(data.content || "") || "[]");
       return { items: Array.isArray(items) ? items : [], sha: data.sha };
     } catch (error) {
@@ -104,7 +107,7 @@
       try {
         await github(contentsUrl(), {
           method: "PUT",
-          body: JSON.stringify({ message, content: toBase64(`${JSON.stringify(items, null, 2)}\n`), ...(sha ? { sha } : {}) }),
+          body: JSON.stringify({ message, branch, content: toBase64(`${JSON.stringify(items, null, 2)}\n`), ...(sha ? { sha } : {}) }),
         });
         return result;
       } catch (error) {

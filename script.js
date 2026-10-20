@@ -75,7 +75,21 @@ async function migrateLocalExpenses() {
   localStorage.removeItem(storageKey);
 }
 
-async function loadExpenses() {
+let loadingExpenses = null;
+function loadExpenses() {
+  loadingExpenses ||= loadExpensesNow().finally(() => (loadingExpenses = null));
+  return loadingExpenses;
+}
+
+// Pick up changes made on another page or device when returning to this one.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") loadExpenses();
+});
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) loadExpenses();
+});
+
+async function loadExpensesNow() {
   try {
     await ExpenseStore.ready();
     await migrateLocalExpenses();
