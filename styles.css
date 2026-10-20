@@ -165,7 +165,7 @@ a.nav-link { display: block; text-decoration: none; }
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
-.checkbox-row { flex-direction: row; align-items: center; gap: 8px; }
+.expense-form .checkbox-row { flex-direction: row; align-items: center; gap: 10px; }
 .checkbox-row input { width: 16px; height: 16px; accent-color: var(--accent); }
 
 .panel-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
@@ -263,3 +263,92 @@ a.nav-link { display: block; text-decoration: none; }
 .week-bar-fill { height: 100%; border-radius: inherit; background: var(--accent, #60a5fa); }
 .week-row.current .week-bar-fill { opacity: 0.6; }
 @media (max-width: 640px) { .week-row { grid-template-columns: 1fr auto; } .week-bar { grid-column: 1 / -1; grid-row: 2; } }
+
+/* ---------- iPhone / touch ---------- */
+html { -webkit-text-size-adjust: 100%; }
+body { min-height: 100dvh; -webkit-tap-highlight-color: transparent; }
+.nav-icon, .nav-short { display: none; }
+.main-content > section, .main-content > div, .panel { scroll-margin-top: 16px; }
+
+/* Hover styles only where there is a real pointer, so they don't stick after a tap. */
+@media (hover: none) {
+  .nav-link:hover { color: var(--muted); background: transparent; }
+  .nav-link.active:hover { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
+  .icon-btn:hover, .ghost-btn:hover { background: var(--panel-strong); }
+  .primary-btn:hover { opacity: 1; }
+  .stat-card:hover { border-color: var(--border); }
+}
+
+/* Comfortable 44px tap targets on touch screens. */
+@media (pointer: coarse) {
+  .icon-btn, .ghost-btn, .primary-btn { min-height: 44px; }
+  .icon-btn { min-width: 44px; padding: 9px 12px; }
+  .checkbox-row input { width: 22px; height: 22px; }
+  .checkbox-row { min-height: 44px; }
+}
+
+@media (max-width: 760px) {
+  /* Room for the notch / Dynamic Island, the home indicator and the tab bar. */
+  :root { --tabbar-height: 58px; }
+  .app-shell {
+    padding: calc(12px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+      calc(var(--tabbar-height) + 24px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+    gap: 16px;
+  }
+  .main-content { gap: 14px; }
+  .topbar { position: static; backdrop-filter: none; background: var(--panel); }
+  .topbar, .hero-card, .panel, .stat-card { border-radius: 16px; padding: 16px; }
+  .topbar h1 { font-size: 1.2rem; }
+  .hero-card h2 { font-size: 1.3rem; }
+  .stat-value { font-size: 1.5rem; }
+
+  /* Top bar: search on its own row, buttons beside each other. */
+  .topbar-actions { display: grid; grid-template-columns: 44px 1fr; gap: 8px; }
+  .search-box { grid-column: 1 / -1; min-height: 44px; }
+
+  /* 16px text stops Safari zooming in when a field is tapped. */
+  input, select, textarea, .search-box input { font-size: 16px; }
+  .expense-form input, .expense-form select, .expense-form textarea, .filter-select { min-height: 44px; width: 100%; min-width: 0; }
+  .expense-form input[type="date"] { -webkit-appearance: none; appearance: none; display: block; }
+  .expense-form input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+  .expense-form .checkbox-row input { width: 22px; min-height: 0; }
+  .panel-header .filter-select { width: 100%; }
+  #submitButton { width: 100%; }
+
+  /* Two stats per row reads better than one long column. */
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stat-card { gap: 4px; }
+  .stat-pill { display: none; }
+
+  /* Transaction rows: title and amount on top, actions underneath. */
+  .transaction-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: start; flex-direction: initial; }
+  .transaction-item .transaction-meta:nth-child(2) { align-items: flex-end; text-align: right; }
+  .transaction-item .transaction-meta:nth-child(3) { grid-column: 1 / -1; flex-direction: row; gap: 8px; }
+  .transaction-item .transaction-meta:nth-child(3) .ghost-btn { flex: 1; }
+  .transaction-title { overflow-wrap: anywhere; }
+
+  /* Sidebar becomes an iOS-style tab bar pinned above the home indicator. */
+  .sidebar {
+    position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; order: 0;
+    padding: 6px calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
+    border-radius: 0; border-width: 1px 0 0; gap: 0;
+    background: color-mix(in srgb, var(--panel) 85%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+  .brand, .sidebar-card, .nav-link.desktop-only, .nav-full { display: none; }
+  .nav-links { grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; }
+  .nav-link {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-height: var(--tabbar-height); padding: 4px 2px; border-radius: 12px;
+    font-size: 0.68rem; font-weight: 500; text-align: center;
+  }
+  a.nav-link { display: flex; }
+  .nav-link.active { background: transparent; color: var(--accent); }
+  .nav-icon { display: block; font-size: 1.35rem; line-height: 1; }
+  .nav-short { display: block; }
+}
+
+@media (max-width: 380px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}

@@ -148,6 +148,7 @@ function setTheme(theme) {
   uiState.theme = theme;
   document.body.classList.toggle("theme-light", theme === "light");
   themeToggle.textContent = theme === "light" ? "☾" : "☀";
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#ffffff" : "#000000");
   localStorage.setItem("expenseos-theme", theme);
 }
 

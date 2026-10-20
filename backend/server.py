@@ -27,6 +27,7 @@ STATIC_FILES = {
     "/config.js": ("config.js", "text/javascript; charset=utf-8"),
     "/store.js": ("store.js", "text/javascript; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
+    "/apple-touch-icon.png": ("apple-touch-icon.png", "image/png"),
     "/dashboard": ("dashboard.html", "text/html; charset=utf-8"),
     "/dashboard.html": ("dashboard.html", "text/html; charset=utf-8"),
 }

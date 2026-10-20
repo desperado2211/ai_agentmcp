@@ -2,7 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wallet" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <title>Spending Dashboard</title>
     <style>
       :root {
@@ -184,12 +192,36 @@
       .error { color: var(--delta-bad); }
       .loading .chart, .loading .cat-rows, .loading table { opacity: 0.5; }
 
+      html { -webkit-text-size-adjust: 100%; }
+      body { -webkit-tap-highlight-color: transparent; }
+      .page {
+        padding-top: calc(24px + env(safe-area-inset-top));
+        padding-right: calc(16px + env(safe-area-inset-right));
+        padding-bottom: calc(64px + env(safe-area-inset-bottom));
+        padding-left: calc(16px + env(safe-area-inset-left));
+      }
+      /* 44px tap targets on touch screens; no hover states that stick after a tap. */
+      @media (pointer: coarse) {
+        .segmented button, .segmented.small button, .ghost { min-height: 44px; }
+        .segmented.small button { padding: 4px 14px; }
+        .legend button { min-height: 36px; padding: 4px 10px; }
+        .back-link { display: inline-block; padding: 10px 0; }
+      }
+      @media (hover: none) {
+        .segmented button:hover, .legend button:hover, .cat-row:hover { background: transparent; }
+        .ghost:hover { color: var(--text-secondary); }
+      }
+      .table-wrap { -webkit-overflow-scrolling: touch; }
+
       @media (max-width: 860px) {
         .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .tile-hero { grid-column: 1 / -1; }
         .charts { grid-template-columns: minmax(0, 1fr); }
+        .tiles > .card:last-child { grid-column: 1 / -1; }
       }
       @media (max-width: 480px) {
+        #rangeButtons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+        #rangeButtons button { padding: 6px 4px; text-align: center; line-height: 1.2; }
         .tile-hero .tile-value { font-size: 2.4rem; }
         .cat-row { grid-template-columns: 90px 1fr; }
         .card { padding: 16px; }
@@ -281,8 +313,8 @@
 
     <div class="tooltip" id="tooltip" role="tooltip"></div>
 
-    <script src="config.js?v=3"></script>
-    <script src="store.js?v=3"></script>
+    <script src="config.js?v=4"></script>
+    <script src="store.js?v=4"></script>
     <script>
       const INCOME_CATEGORIES = new Set(["Salary"]);
       // Color follows the category, never its rank. "Other" (and anything unknown) is the neutral fold.
@@ -477,10 +509,18 @@
       function bindTooltip(el, build) {
         el.addEventListener("pointerenter", (event) => build(event));
         el.addEventListener("pointermove", positionTooltip);
-        el.addEventListener("pointerleave", hideTooltip);
+        // A tap ends with pointerleave; keep the tooltip until the next tap elsewhere or a scroll.
+        el.addEventListener("pointerleave", (event) => {
+          if (event.pointerType !== "touch") hideTooltip();
+        });
         el.addEventListener("focus", (event) => build(event));
         el.addEventListener("blur", hideTooltip);
       }
+
+      document.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "touch" && !event.target.closest(".hit, .cat-row")) hideTooltip();
+      });
+      window.addEventListener("scroll", hideTooltip, { passive: true });
 
       // ---------- charts ----------
       function svgEl(tag, attrs = {}) {

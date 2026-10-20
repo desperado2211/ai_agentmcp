@@ -192,7 +192,7 @@
     button.textContent = "Disconnect";
     button.title = "Forget the GitHub token on this device";
     button.style.cssText =
-      "position:fixed;right:12px;bottom:12px;z-index:50;padding:6px 12px;border-radius:999px;border:1px solid rgba(128,128,128,0.4);" +
+      "position:fixed;right:calc(12px + env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom) + var(--tabbar-height, 0px));z-index:50;min-height:32px;padding:6px 12px;border-radius:999px;border:1px solid rgba(128,128,128,0.4);" +
       "background:rgba(128,128,128,0.15);color:inherit;font:13px system-ui,-apple-system,sans-serif;cursor:pointer;backdrop-filter:blur(6px);";
     button.addEventListener("click", () => {
       try {

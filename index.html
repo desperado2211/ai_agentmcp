@@ -2,10 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#07111f" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wallet" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <title>ExpenseOS — Premium Expense Tracker</title>
-    <link rel="stylesheet" href="styles.css?v=9" />
+    <link rel="stylesheet" href="styles.css?v=10" />
   </head>
   <body class="theme-dark">
     <div class="app-shell">
@@ -19,12 +25,13 @@
         </div>
 
         <nav class="nav-links">
-          <button class="nav-link active" type="button" data-target="dashboard">Dashboard</button>
-          <button class="nav-link" type="button" data-target="transactions">Transactions</button>
-          <button class="nav-link" type="button" data-target="budgets">Budgets</button>
-          <button class="nav-link" type="button" data-target="analytics">Analytics</button>
-          <button class="nav-link" type="button" data-target="settings">Settings</button>
-          <a class="nav-link" href="dashboard.html">Spending dashboard ↗</a>
+          <button class="nav-link active" type="button" data-target="dashboard"><span class="nav-icon" aria-hidden="true">⌂</span><span class="nav-full">Dashboard</span><span class="nav-short">Home</span></button>
+          <button class="nav-link" type="button" data-target="expenseEntry"><span class="nav-icon" aria-hidden="true">＋</span><span class="nav-full">Add expense</span><span class="nav-short">Add</span></button>
+          <button class="nav-link" type="button" data-target="transactions"><span class="nav-icon" aria-hidden="true">≡</span><span class="nav-full">Transactions</span><span class="nav-short">Activity</span></button>
+          <button class="nav-link desktop-only" type="button" data-target="budgets">Budgets</button>
+          <button class="nav-link" type="button" data-target="analytics"><span class="nav-icon" aria-hidden="true">↗</span><span class="nav-full">Analytics</span><span class="nav-short">Trends</span></button>
+          <button class="nav-link desktop-only" type="button" data-target="settings">Settings</button>
+          <a class="nav-link" href="dashboard.html"><span class="nav-icon" aria-hidden="true">▤</span><span class="nav-full">Spending dashboard ↗</span><span class="nav-short">Charts</span></a>
         </nav>
 
         <div class="sidebar-card">
@@ -42,9 +49,9 @@
           <div class="topbar-actions">
             <label class="search-box">
               <span>⌕</span>
-              <input id="searchInput" type="search" placeholder="Search transactions" />
+              <input id="searchInput" type="search" placeholder="Search transactions" enterkeyhint="search" />
             </label>
-            <button id="themeToggle" class="icon-btn" type="button">☀</button>
+            <button id="themeToggle" class="icon-btn" type="button" aria-label="Toggle light or dark theme">☀</button>
             <button id="exportButton" class="primary-btn" type="button">Export CSV</button>
           </div>
         </header>
@@ -94,7 +101,7 @@
         </section>
 
         <section class="content-grid">
-          <div class="panel panel-form">
+          <div class="panel panel-form" id="expenseEntry">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Expense entry</p>
@@ -107,11 +114,11 @@
               <input type="hidden" id="expenseId" />
               <label>
                 Title
-                <input id="title" type="text" placeholder="Dinner reservation" required />
+                <input id="title" type="text" placeholder="Dinner reservation" autocapitalize="sentences" enterkeyhint="next" required />
               </label>
               <label>
                 Amount
-                <input id="amount" type="number" min="0" step="0.01" placeholder="48.00" required />
+                <input id="amount" type="number" inputmode="decimal" min="0" step="0.01" placeholder="48.00" enterkeyhint="next" required />
               </label>
               <label>
                 Category
@@ -130,7 +137,7 @@
               </label>
               <label>
                 Merchant
-                <input id="merchant" type="text" placeholder="Blue Bottle" />
+                <input id="merchant" type="text" placeholder="Blue Bottle" autocapitalize="words" enterkeyhint="next" />
               </label>
               <label>
                 Payment method
@@ -187,7 +194,7 @@
         </section>
 
         <section class="insights-grid">
-          <div class="panel">
+          <div class="panel" id="budgets">
             <div class="panel-header">
               <div>
                 <p class="panel-kicker">Budget</p>
@@ -239,8 +246,8 @@
       </main>
     </div>
 
-    <script src="config.js?v=3"></script>
-    <script src="store.js?v=3"></script>
-    <script src="script.js?v=3"></script>
+    <script src="config.js?v=4"></script>
+    <script src="store.js?v=4"></script>
+    <script src="script.js?v=4"></script>
   </body>
 </html>
